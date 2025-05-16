@@ -5,5 +5,12 @@ You can then start any HTTP server (e.g. `python3 -m http.server`) and see a sim
 
 **Warning**: Downloading all Rust stable versions takes some time, and will take 50+ GiB of disk space.
 
+## Usage
+
+```bash
+$ python3 evolution.py
+$ python3 -m http.server
+```
+
 ## License
 [MIT](LICENSE)
