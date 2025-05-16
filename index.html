@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust Compiler Error Evolution</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+        }
+        
+        /* Container for the entire component */
+        .rustc-error-evolution {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        /* Program panel styles */
+        .program-panel {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .program-header {
+            background-color: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .program-name {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .program-content {
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .program-content {
+                flex-direction: row;
+            }
+        }
+        
+        /* Source code styles */
+        .source-code {
+            flex: 1;
+            margin-bottom: 16px;
+            padding-right: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .source-code {
+                margin-bottom: 0;
+                max-width: 40%;
+            }
+        }
+        
+        .source-code pre {
+            background-color: #f6f8fa;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Error message styles */
+        .error-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .version-slider-container {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .version-slider {
+            flex: 1;
+            margin: 0 10px;
+        }
+        
+        .version-label {
+            font-size: 14px;
+            color: #666;
+            min-width: 80px;
+        }
+        
+        .error-message {
+            background-color: #DDDDDD;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            flex-grow: 1;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        /* Error state */
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #d73a49;
+        }
+    </style>
+    <script src="ansi_up.js" type="text/javascript"></script>
+</head>
+<body>
+    <div class="rustc-error-evolution">
+        <h1>Evolution of Rust Compiler Error Messages</h1>
+        <p>This visualization shows how Rust compiler error messages have evolved over different versions.</p>
+        <div id="programs-container">
+            <div class="loading">Loading error data...</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const programsContainer = document.getElementById('programs-container');
+
+            try {
+                const response = await fetch("errors.json");
+                const data = await response.json();
+
+                // Clear loading message
+                programsContainer.innerHTML = '';
+
+                var ansi_up = new AnsiUp;
+                
+                // Process each program
+                data.programs.forEach(program => {
+                    // Create program panel
+                    const programPanel = document.createElement('div');
+                    programPanel.className = 'program-panel';
+                    
+                    // Create program header
+                    const programHeader = document.createElement('div');
+                    programHeader.className = 'program-header';
+                    programHeader.innerHTML = `
+                        <div class="program-name">${program.name}.rs</div>
+                        <div class="version-count">${program.versions.length} different error versions</div>
+                    `;
+                    programPanel.appendChild(programHeader);
+                    
+                    // Create program content
+                    const programContent = document.createElement('div');
+                    programContent.className = 'program-content';
+                    
+                    // Add source code
+                    const sourceCode = document.createElement('div');
+                    sourceCode.className = 'source-code';
+                    sourceCode.innerHTML = `
+                        <h3>Source Code</h3>
+                        <pre>${escapeHtml(program.source)}</pre>
+                    `;
+                    programContent.appendChild(sourceCode);
+                    
+                    // Add error container
+                    const errorContainer = document.createElement('div');
+                    errorContainer.className = 'error-container';
+                    
+                    // Add version slider
+                    const versionSliderContainer = document.createElement('div');
+                    versionSliderContainer.className = 'version-slider-container';
+                    
+                    const minVersionLabel = document.createElement('div');
+                    minVersionLabel.className = 'version-label';
+                    minVersionLabel.textContent = program.versions[0].release;
+                    
+                    const versionSlider = document.createElement('input');
+                    versionSlider.type = 'range';
+                    versionSlider.min = '0';
+                    versionSlider.max = (program.versions.length - 1).toString();
+                    versionSlider.value = '0';
+                    versionSlider.className = 'version-slider';
+                    
+                    const maxVersionLabel = document.createElement('div');
+                    maxVersionLabel.className = 'version-label';
+                    maxVersionLabel.textContent = program.versions[program.versions.length - 1].release;
+                    
+                    const currentVersionLabel = document.createElement('div');
+                    currentVersionLabel.className = 'version-label';
+                    currentVersionLabel.textContent = program.versions[0].release;
+                    
+                    versionSliderContainer.appendChild(minVersionLabel);
+                    versionSliderContainer.appendChild(versionSlider);
+                    versionSliderContainer.appendChild(maxVersionLabel);
+                    
+                    // Add error message
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.innerHTML = ansi_up.ansi_to_html(program.versions[0].stderr);
+
+                    // Add event listener to slider
+                    versionSlider.addEventListener('input', function() {
+                        const versionIndex = parseInt(this.value);
+                        errorMessage.innerHTML = ansi_up.ansi_to_html(program.versions[versionIndex].stderr);
+                        currentVersionLabel.textContent = program.versions[versionIndex].release;
+                    });
+                    
+                    // Add current version display
+                    const currentVersionContainer = document.createElement('div');
+                    currentVersionContainer.style.textAlign = 'center';
+                    currentVersionContainer.style.marginBottom = '10px';
+                    currentVersionContainer.appendChild(currentVersionLabel);
+                    
+                    errorContainer.appendChild(versionSliderContainer);
+                    errorContainer.appendChild(currentVersionContainer);
+                    errorContainer.appendChild(errorMessage);
+                    
+                    programContent.appendChild(errorContainer);
+                    programPanel.appendChild(programContent);
+                    
+                    // Add program panel to container
+                    programsContainer.appendChild(programPanel);
+                });
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                programsContainer.innerHTML = `
+                    <div class="error">
+                        <p>Failed to load error data: ${error.message}</p>
+                        <p>Make sure the output.json file is available and properly formatted.</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Helper function to escape HTML
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
