@@ -3,11 +3,14 @@ This repository contains a Python script that downloads stable Rust compiler rel
 
 You can then start any HTTP server (e.g. `python3 -m http.server`) and see a simple website that shows how the errors evolved over time.
 
+Note that the `errors.json` file is pregenerated in this repository, so you can just start the server without regenerating it.
+
 **Warning**: Downloading all Rust stable versions takes some time, and will take 50+ GiB of disk space.
 
 ## Usage
 
 ```bash
+# If you want to regenerate the data (might take a long time!)
 $ python3 evolution.py
 $ python3 -m http.server
 ```
