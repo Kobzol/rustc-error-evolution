@@ -66,7 +66,6 @@ if __name__ == "__main__":
 
     from multiprocessing.pool import ThreadPool as Pool
 
-    os.makedirs("output", exist_ok=True)
     program_results = []
     with Pool() as pool:
         for program in programs:
