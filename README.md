@@ -1,6 +1,8 @@
 # Rustc error evolution
 This repository contains a Python script that downloads stable Rust compiler releases all the way back to 1.0, runs each compiler version on each Rust program in the `programs` directory and gathers the standard error output. The output is then outputted to a file called `errors.json`.
 
+You can find the accompanying blog post [here](https://kobzol.github.io/rust/rustc/2025/05/16/evolution-of-rustc-errors.html).
+
 You can then start any HTTP server (e.g. `python3 -m http.server`) and see a simple website that shows how the errors evolved over time.
 
 Note that the `errors.json` file is pregenerated in this repository, so you can just start the server without regenerating it.
